@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Redis</title>
+    <link rel="stylesheet" href="/static/css/index.css">
+    <link rel="stylesheet" href="/static/css/theme-toggle.css">
+</head>
+<body>
+    <h1>Recetas</h1>
+
+    <h2>Agregar nueva receta</h2>
+    <form id="form-agregar" action="/recetas" method="POST">
+        <label for="nombre">Nombre:</label><br>
+        <input type="text" id="nombre" name="nombre"><br>
+        <label for="ingredientes">Ingredientes (separados por comas):</label><br>
+        <input type="text" id="ingredientes" name="ingredientes"><br>
+        <label for="pasos">Pasos:</label><br>
+        <textarea id="pasos" name="pasos"></textarea><br><br>
+        <button type="submit">Agregar receta</button>
+    </form>
+
+    <h2>Actualizar receta existente</h2>
+    <form id="form-actualizar" action="/recetas" method="PUT">
+        <label for="nombre-actualizar">Nombre de la receta a actualizar:</label><br>
+        <input type="text" id="nombre-actualizar" name="nombre"><br>
+        <label for="ingredientes-actualizar">Nuevos ingredientes (separados por comas):</label><br>
+        <input type="text" id="ingredientes-actualizar" name="ingredientes"><br>
+        <label for="pasos-actualizar">Nuevos pasos:</label><br>
+        <textarea id="pasos-actualizar" name="pasos"></textarea><br><br>
+        <button type="submit">Actualizar receta</button>
+    </form>
+
+    <h2>Eliminar receta existente</h2>
+    <form id="form-eliminar" action="/recetas" method="DELETE">
+        <label for="nombre-eliminar">Nombre de la receta a eliminar:</label><br>
+        <input type="text" id="nombre-eliminar" name="nombre"><br><br>
+        <button type="submit">Eliminar receta</button>
+    </form>
+
+    <h2>Listado de recetas</h2>
+    <div id="listado-recetas"></div>
+
+    <button id="theme-toggle" class="theme-toggle">Cambiar tema</button>
+
+    <script>
+        // Función para cargar el listado de recetas
+        function cargarRecetas() {
+            fetch('/recetas')
+                .then(response => response.json())
+                .then(data => {
+                    const listadoRecetas = document.getElementById('listado-recetas');
+                    listadoRecetas.innerHTML = '';
+
+                    data.forEach(receta => {
+                        const recetaElement = document.createElement('div');
+                        recetaElement.innerHTML = `<strong>${receta.nombre}</strong><br>
+                                                   Ingredientes: ${receta.ingredientes.join(', ')}<br>
+                                                   Pasos: ${receta.pasos}<br><br>`;
+                        listadoRecetas.appendChild(recetaElement);
+                    });
+                });
+        }
+
+        // Cargar listado de recetas al cargar la página
+        cargarRecetas();
+
+        // Agregar evento submit al formulario de agregar receta
+        document.getElementById('form-agregar').addEventListener('submit', event => {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const jsonData = {};
+            formData.forEach((value, key) => { jsonData[key] = value });
+
+            fetch('/recetas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(jsonData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                cargarRecetas();
+            });
+        });
+
+        // Agregar evento submit al formulario de actualizar receta
+        document.getElementById('form-actualizar').addEventListener('submit', event => {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const jsonData = {};
+            formData.forEach((value, key) => { jsonData[key] = value });
+
+            fetch(`/recetas/${jsonData.nombre}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(jsonData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                cargarRecetas();
+            });
+        });
+
+        // Agregar evento submit al formulario de eliminar receta
+        document.getElementById('form-eliminar').addEventListener('submit', event => {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const nombre = formData.get('nombre');
+
+            fetch(`/recetas/${nombre}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                cargarRecetas();
+            });
+        });
+
+        // Agregar evento click al botón de cambio de tema
+        const themeToggle = document.getElementById('theme-toggle');
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+        });
+    </script>
+</body>
+</html>
